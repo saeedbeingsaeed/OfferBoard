@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block head_title %}Track your co-op search{% endblock %}
+{% block body %}
+  {% include "partials/header.html" %}
+  {% include "partials/messages.html" %}
+  <main id="main" class="relative flex flex-1 items-center overflow-hidden">
+    <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-gradient-to-b from-brand-100/70 to-transparent dark:from-brand-950/50" aria-hidden="true"></div>
+    <div class="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:px-8">
+      <div>
+        <p class="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/70 px-3 py-1 text-xs font-medium text-brand-800 dark:border-brand-900 dark:bg-brand-950/50 dark:text-brand-300">
+          <span class="stage-4 stage-dot"></span> Built for co-op and internship season
+        </p>
+        <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+          Every application, <span class="text-brand-600 dark:text-brand-400">one board.</span>
+        </h1>
+        <p class="mt-5 max-w-xl text-lg text-pretty text-zinc-600 dark:text-zinc-400">
+          Stop losing track in a spreadsheet. Move each job from Applied to Offer, never miss a deadline,
+          and see what's actually working in your search.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="{% url 'account_signup' %}" class="btn btn-primary px-5 py-2.5 text-base">Get started, free</a>
+          <a href="{% url 'account_login' %}" class="btn btn-secondary px-5 py-2.5 text-base">Sign in</a>
+        </div>
+        <ul class="mt-10 grid max-w-xl gap-3 text-sm text-zinc-600 sm:grid-cols-3 dark:text-zinc-400">
+          <li class="flex gap-2"><span aria-hidden="true">📋</span> Drag-and-drop board</li>
+          <li class="flex gap-2"><span aria-hidden="true">⏰</span> Deadline reminders</li>
+          <li class="flex gap-2"><span aria-hidden="true">📈</span> Response-rate stats</li>
+        </ul>
+      </div>
+
+      {# A static picture of the board, built from the same styles as the real one. #}
+      <div class="hidden lg:block" aria-hidden="true">
+        <div class="card grid -rotate-1 grid-cols-3 gap-3 bg-zinc-50/80 p-4 shadow-xl dark:bg-zinc-900/80">
+          <div class="stage-1 space-y-2">
+            <p class="flex items-center gap-2 px-1 text-xs font-semibold text-zinc-600 dark:text-zinc-300"><span class="stage-dot"></span>Applied <span class="text-zinc-400">3</span></p>
+            <div class="rounded-lg border border-zinc-200 border-l-4 border-l-(--stage) bg-white p-3 shadow-xs dark:border-zinc-800 dark:border-l-(--stage) dark:bg-zinc-900">
+              <p class="text-sm font-semibold">Shopify</p>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">Backend Developer Intern</p>
+              <p class="mt-2 text-xs font-medium text-zinc-600 dark:text-zinc-300">Due Fri</p>
+            </div>
+            <div class="rounded-lg border border-zinc-200 border-l-4 border-l-(--stage) bg-white p-3 shadow-xs dark:border-zinc-800 dark:border-l-(--stage) dark:bg-zinc-900">
+              <p class="text-sm font-semibold">RBC</p>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">Data Analyst Co-op</p>
+            </div>
+            <div class="rounded-lg border border-zinc-200 border-l-4 border-l-(--stage) bg-white p-3 shadow-xs dark:border-zinc-800 dark:border-l-(--stage) dark:bg-zinc-900">
+              <p class="text-sm font-semibold">Wealthsimple</p>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">Software Engineer Intern</p>
+            </div>
+          </div>
+          <div class="stage-3 space-y-2">
+            <p class="flex items-center gap-2 px-1 text-xs font-semibold text-zinc-600 dark:text-zinc-300"><span class="stage-dot"></span>Interview <span class="text-zinc-400">2</span></p>
+            <div class="rounded-lg border border-zinc-200 border-l-4 border-l-(--stage) bg-white p-3 shadow-xs dark:border-zinc-800 dark:border-l-(--stage) dark:bg-zinc-900">
+              <p class="text-sm font-semibold">Google</p>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">SWE Intern</p>
+              <p class="mt-2 text-xs font-medium text-zinc-600 dark:text-zinc-300">Thu 2:00 pm</p>
+            </div>
+            <div class="rounded-lg border border-zinc-200 border-l-4 border-l-(--stage) bg-white p-3 shadow-xs dark:border-zinc-800 dark:border-l-(--stage) dark:bg-zinc-900">
+              <p class="text-sm font-semibold">Ubisoft</p>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">Gameplay Programmer Co-op</p>
+            </div>
+          </div>
+          <div class="stage-4 space-y-2">
+            <p class="flex items-center gap-2 px-1 text-xs font-semibold text-zinc-600 dark:text-zinc-300"><span class="stage-dot"></span>Offer <span class="text-zinc-400">1</span></p>
+            <div class="rounded-lg border border-zinc-200 border-l-4 border-l-(--stage) bg-white p-3 shadow-xs dark:border-zinc-800 dark:border-l-(--stage) dark:bg-zinc-900">
+              <p class="text-sm font-semibold">Shopify</p>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">Dev Intern, Winter</p>
+              <p class="mt-2 text-xs font-medium text-zinc-600 dark:text-zinc-300">🎉</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block head_title %}Applications{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Applications</h1>
+      <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        {% if total %}{{ total }} application{{ total|pluralize }} tracked.{% else %}Your search starts here.{% endif %}
+      </p>
+    </div>
+  </div>
+
+  <ul class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6" aria-label="Applications by stage">
+    {% for stage, count in stage_counts %}
+      <li class="card stage-{{ stage.value }} p-4">
+        <p class="flex items-center gap-2 text-xs font-medium text-zinc-600 dark:text-zinc-400"><span class="stage-dot"></span>{{ stage.label }}</p>
+        <p class="mt-2 text-2xl font-semibold tabular-nums">{{ count }}</p>
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if not total %}
+    {% include "partials/empty_state.html" with title="No applications yet" body="Adding, editing and the table view arrive in the next milestone. Your account is ready." %}
+  {% endif %}
+{% endblock %}

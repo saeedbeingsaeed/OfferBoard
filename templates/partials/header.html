@@ -1,0 +1,40 @@
+<header class="sticky top-0 z-40 border-b border-zinc-200 bg-white/85 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/85">
+  <div class="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+    <a href="{% if user.is_authenticated %}{% url 'tracker:home' %}{% else %}{% url 'landing' %}{% endif %}" class="no-underline hover:no-underline" aria-label="Offerboard home">
+      {% include "partials/logo.html" %}
+    </a>
+
+    {% if user.is_authenticated %}
+      <nav class="flex items-center gap-1 text-sm" aria-label="Main">
+        {% url 'tracker:home' as home_url %}
+        <a href="{{ home_url }}" class="btn btn-ghost px-3 py-1.5 {% if request.path == home_url %}bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white{% endif %}"
+           {% if request.path == home_url %}aria-current="page"{% endif %}>Applications</a>
+      </nav>
+
+      <div class="ml-auto flex items-center gap-2">
+        {% if user.is_staff %}
+          <a href="{% url 'admin:index' %}" class="btn btn-ghost hidden px-3 py-1.5 sm:inline-flex">Admin</a>
+        {% endif %}
+        <details class="relative">
+          <summary class="btn btn-ghost list-none px-2 py-1.5 [&::-webkit-details-marker]:hidden" aria-label="Account menu">
+            <span class="grid size-7 place-items-center rounded-full bg-brand-100 text-xs font-bold text-brand-800 uppercase dark:bg-brand-900 dark:text-brand-200">{{ user.email|first }}</span>
+            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/></svg>
+          </summary>
+          <div class="card absolute right-0 mt-2 w-60 p-1.5 shadow-lg">
+            <p class="truncate px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400">{{ user.email }}</p>
+            <a href="{% url 'account_change_password' %}" class="block rounded-md px-3 py-2 text-sm text-zinc-700 no-underline hover:bg-zinc-100 hover:no-underline dark:text-zinc-200 dark:hover:bg-zinc-800">Password</a>
+            <form method="post" action="{% url 'account_logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="block w-full rounded-md px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800">Sign out</button>
+            </form>
+          </div>
+        </details>
+      </div>
+    {% else %}
+      <div class="ml-auto flex items-center gap-2">
+        <a href="{% url 'account_login' %}" class="btn btn-ghost">Sign in</a>
+        <a href="{% url 'account_signup' %}" class="btn btn-primary">Sign up</a>
+      </div>
+    {% endif %}
+  </div>
+</header>
