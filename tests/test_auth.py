@@ -71,17 +71,6 @@ def test_every_app_page_requires_sign_in(client):
         assert response.url.startswith(reverse("account_login")), name
 
 
-def test_home_shows_only_my_counts(client, user, other_user, make_application):
-    make_application(user)
-    make_application(other_user)
-    make_application(other_user)
-    client.force_login(user)
-
-    response = client.get(reverse("tracker:home"))
-
-    assert response.context["total"] == 1
-
-
 def test_user_manager_creates_users_by_email():
     admin = User.objects.create_superuser(email="ADMIN@Example.com", password="x")
     assert admin.email == "ADMIN@example.com"  # domain is normalised

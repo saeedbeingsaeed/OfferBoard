@@ -6,9 +6,10 @@
 
     {% if user.is_authenticated %}
       <nav class="flex items-center gap-1 text-sm" aria-label="Main">
-        {% url 'tracker:home' as home_url %}
-        <a href="{{ home_url }}" class="btn btn-ghost px-3 py-1.5 {% if request.path == home_url %}bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white{% endif %}"
-           {% if request.path == home_url %}aria-current="page"{% endif %}>Applications</a>
+        {% with active=request.resolver_match.namespace %}
+        <a href="{% url 'tracker:home' %}" class="btn btn-ghost px-3 py-1.5 {% if active == 'tracker' %}bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white{% endif %}"
+           {% if active == 'tracker' %}aria-current="page"{% endif %}>Applications</a>
+        {% endwith %}
       </nav>
 
       <div class="ml-auto flex items-center gap-2">
@@ -22,6 +23,7 @@
           </summary>
           <div class="card absolute right-0 mt-2 w-60 p-1.5 shadow-lg">
             <p class="truncate px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400">{{ user.email }}</p>
+            <a href="{% url 'tracker:resumes' %}" class="block rounded-md px-3 py-2 text-sm text-zinc-700 no-underline hover:bg-zinc-100 hover:no-underline dark:text-zinc-200 dark:hover:bg-zinc-800">Resume versions</a>
             <a href="{% url 'account_change_password' %}" class="block rounded-md px-3 py-2 text-sm text-zinc-700 no-underline hover:bg-zinc-100 hover:no-underline dark:text-zinc-200 dark:hover:bg-zinc-800">Password</a>
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}

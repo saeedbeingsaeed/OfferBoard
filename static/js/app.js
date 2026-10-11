@@ -33,6 +33,18 @@ document.addEventListener("keydown", (event) => {
 document.addEventListener("htmx:beforeRequest", () => document.getElementById("page-progress")?.classList.add("htmx-request"));
 document.addEventListener("htmx:afterRequest", () => document.getElementById("page-progress")?.classList.remove("htmx-request"));
 
+// Server-sent toasts: views reply with an HX-Trigger header like {"toast": {"message": "..."}}.
+document.addEventListener("toast", (event) => showToast(event.detail.message));
+
+// A control that saves on change (data-current holds the saved value) goes back
+// to that value if the save fails, so the page never shows something unsaved.
+document.addEventListener("htmx:afterRequest", (event) => {
+  const control = event.detail.elt;
+  if (!("current" in control.dataset)) return;
+  if (event.detail.successful) control.dataset.current = control.value;
+  else control.value = control.dataset.current;
+});
+
 // A failed HTMX request should never fail silently.
 document.addEventListener("htmx:responseError", (event) => {
   showToast(event.detail.xhr.status === 403 ? "Your session expired. Reload the page and try again." : "Something went wrong. Please try again.", "error");

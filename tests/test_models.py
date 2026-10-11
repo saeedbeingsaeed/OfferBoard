@@ -1,3 +1,5 @@
+import datetime
+
 import pytest
 
 from tracker.models import Application, Stage, StageChange
@@ -68,3 +70,21 @@ def test_stages_are_in_pipeline_order():
         Stage.OFFER,
         Stage.REJECTED,
     ]
+
+
+def test_moving_past_saved_fills_in_the_applied_date(user, make_application):
+    app = make_application(user)
+    assert app.date_applied is None
+
+    app.move_to(Stage.APPLIED)
+
+    app.refresh_from_db()
+    assert app.date_applied is not None
+
+
+def test_an_existing_applied_date_is_kept(user, make_application):
+    app = make_application(user, stage=Stage.APPLIED, date_applied=datetime.date(2026, 9, 1))
+    app.move_to(Stage.INTERVIEW)
+
+    app.refresh_from_db()
+    assert app.date_applied == datetime.date(2026, 9, 1)

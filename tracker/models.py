@@ -78,6 +78,12 @@ class Application(models.Model):
         """
         is_new = self._state.adding
         previous = getattr(self, "_saved_stage", None)
+        # Anything past Saved has been applied to; default the date to today so
+        # it still counts in the per-week stats.
+        if self.stage != Stage.SAVED and self.date_applied is None:
+            self.date_applied = timezone.localdate()
+            if kwargs.get("update_fields") is not None:
+                kwargs["update_fields"] = {*kwargs["update_fields"], "date_applied"}
         with transaction.atomic():
             super().save(*args, **kwargs)
             if is_new or self.stage != previous:
