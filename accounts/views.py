@@ -1,14 +1,18 @@
 import json
 
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_not_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 from tracker import reminders
 
+from . import demo, metrics
 from .context_processors import email_sending_enabled
 from .forms import ReminderSettingsForm
 
@@ -18,6 +22,23 @@ def landing(request):
     if request.user.is_authenticated:
         return redirect("tracker:board")
     return render(request, "landing.html")
+
+
+@login_not_required
+@require_POST  # creating an account is a state change, so it's a POST with a CSRF token
+def start_demo(request):
+    """The landing page's "Try the demo" button."""
+    if request.user.is_authenticated:
+        # Never swap a signed-in user (real or demo) for a new demo account.
+        return redirect("tracker:board")
+    user = demo.create_demo_user()
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+    return redirect("tracker:board")
+
+
+@staff_member_required
+def metrics_page(request):
+    return render(request, "accounts/metrics.html", {"metrics": metrics.collect()})
 
 
 @login_not_required

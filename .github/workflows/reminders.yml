@@ -1,4 +1,4 @@
-# Sends the daily reminder emails.
+# Sends the daily reminder emails, and deletes demo accounts older than a day.
 #
 # Runs in GitHub Actions rather than on Render because Render's free tier
 # blocks outgoing email (SMTP) and puts the web server to sleep. It also touches
@@ -52,5 +52,8 @@ jobs:
           python-version: "3.13"
           cache: pip
       - run: pip install -r requirements.txt
+      - name: Delete expired demo accounts
+        if: ${{ !inputs.dry_run }}
+        run: python manage.py purge_demo_users
       - name: Send reminders
         run: python manage.py send_reminders ${{ inputs.dry_run && '--dry-run' || '' }}

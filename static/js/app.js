@@ -68,3 +68,21 @@ function showToast(text, level) {
   autoDismissToasts();
 }
 window.showToast = showToast;
+
+// Buttons that start slow work (like setting up the demo) say so and can't be double-clicked.
+document.addEventListener("submit", (event) => {
+  const button = event.target.querySelector("[data-loading-text]");
+  if (!button) return;
+  button.dataset.originalHtml = button.innerHTML;
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  button.textContent = button.dataset.loadingText;
+});
+// Coming back with the browser's Back button can restore the page as it was left; reset those buttons.
+window.addEventListener("pageshow", () => {
+  document.querySelectorAll("[data-loading-text][aria-busy]").forEach((button) => {
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
+    button.innerHTML = button.dataset.originalHtml;
+  });
+});
