@@ -32,6 +32,9 @@ class User(AbstractUser):
     reminders_enabled = models.BooleanField(
         default=True, help_text="Send the daily email about deadlines and stale applications."
     )
+    last_reminder_sent_on = models.DateField(
+        null=True, blank=True, help_text="Stops the daily job from emailing someone twice on the same day."
+    )
     is_demo = models.BooleanField(default=False, help_text="Throwaway account created by the 'Try the demo' button.")
 
     USERNAME_FIELD = "email"

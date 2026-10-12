@@ -158,9 +158,32 @@ SOCIALACCOUNT_LOGIN_ON_GET = True  # one click on "Continue with Google", no ext
 
 # --- Email -------------------------------------------------------------------
 
-# Printed to the server log until milestone 5 sets up a real provider.
-MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Offerboard <noreply@offerboard.local>")
+# Reminder emails go out through Gmail SMTP from a GitHub Actions job (see
+# .github/workflows/reminders.yml). Render's free tier blocks outgoing SMTP, so
+# the web app itself never sets these and uses the console backend (log only).
+smtp_username = env("SMTP_USERNAME")
+smtp_password = env("SMTP_PASSWORD")
+if smtp_username and smtp_password:
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+            "OPTIONS": {
+                "host": env("SMTP_HOST", "smtp.gmail.com"),
+                "port": int(env("SMTP_PORT", "587")),
+                "username": smtp_username,
+                "password": smtp_password,
+                "use_tls": True,
+                "timeout": 20,
+            },
+        }
+    }
+else:
+    MAILERS = {"default": {"BACKEND": "django.core.mail.backends.console.EmailBackend"}}
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", f"Offerboard <{smtp_username or 'noreply@offerboard.local'}>")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Full address of the site, for links in emails (there's no request to build them from).
+SITE_URL = env("SITE_URL", "http://localhost:8000").rstrip("/")
 
 # --- Static files ------------------------------------------------------------
 
@@ -185,8 +208,13 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_REFERRER_POLICY = "same-origin"
 SECURE_CONTENT_TYPE_NOSNIFF = True
-# HSTS preload is a promise for a whole domain; we don't own onrender.com.
-SILENCED_SYSTEM_CHECKS = ["security.W021"]
+SILENCED_SYSTEM_CHECKS = [
+    # HSTS preload is a promise for a whole domain; we don't own onrender.com.
+    "security.W021",
+    # The web app on Render deliberately has no mail server (Render's free tier
+    # blocks SMTP). Reminder emails are sent from GitHub Actions instead.
+    "mail.E001",
+]
 X_FRAME_OPTIONS = "DENY"
 # The health check is called over plain HTTP by Render's internal checker.
 SECURE_REDIRECT_EXEMPT = [r"^healthz$"]

@@ -25,8 +25,8 @@
           </summary>
           <div class="card absolute right-0 mt-2 w-60 p-1.5 shadow-lg">
             <p class="truncate px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400">{{ user.email }}</p>
+            <a href="{% url 'settings' %}" class="block rounded-md px-3 py-2 text-sm text-zinc-700 no-underline hover:bg-zinc-100 hover:no-underline dark:text-zinc-200 dark:hover:bg-zinc-800">Settings</a>
             <a href="{% url 'tracker:resumes' %}" class="block rounded-md px-3 py-2 text-sm text-zinc-700 no-underline hover:bg-zinc-100 hover:no-underline dark:text-zinc-200 dark:hover:bg-zinc-800">Resume versions</a>
-            <a href="{% url 'account_change_password' %}" class="block rounded-md px-3 py-2 text-sm text-zinc-700 no-underline hover:bg-zinc-100 hover:no-underline dark:text-zinc-200 dark:hover:bg-zinc-800">Password</a>
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}
               <button type="submit" class="block w-full rounded-md px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800">Sign out</button>

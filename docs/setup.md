@@ -1,6 +1,6 @@
-# Setup: Supabase, Render and Google sign-in
+# Setup: Supabase, Render, Google sign-in and reminder emails
 
-All three are free and need no credit card. Do them in this order. Total time: about 30 minutes.
+All of these are free and need no credit card. Do them in this order. Total time: about 45 minutes.
 
 Throughout, replace `offerboard.onrender.com` with your real Render URL if that name is taken
 (Render shows the URL on the service page).
@@ -107,3 +107,56 @@ Every push to `main` now deploys automatically.
 
 If Google shows `redirect_uri_mismatch`, the redirect URI in step 4 doesn't exactly match the
 URL in the error message (check `http` vs `https` and the trailing slash).
+
+---
+
+## 4. Reminder emails (Gmail + GitHub Actions)
+
+The daily reminder email is sent by a scheduled GitHub Actions workflow
+(`.github/workflows/reminders.yml`), not by Render: Render's free tier blocks
+outgoing email. The same daily run keeps the Supabase project from pausing.
+
+### 4.1 The Gmail account
+
+Use a Gmail account made just for Offerboard (not your personal one).
+
+1. In that account: **Google Account → Security → 2-Step Verification** → turn it on.
+2. **Security → App passwords** (or search "App passwords") → create one named `Offerboard`.
+   Copy the 16-character password; Google only shows it once. Remove the spaces.
+
+### 4.2 GitHub secrets and variables
+
+In the GitHub repo: **Settings → Secrets and variables → Actions**.
+
+**Secrets** tab → **New repository secret**, four times:
+
+| Name | Value |
+|---|---|
+| `DATABASE_URL` | The same Supabase session pooler URI that Render uses |
+| `SECRET_KEY` | The same value as Render's: Render → service → **Environment** → `SECRET_KEY` → reveal and copy. It must match, or the unsubscribe links in emails won't work on the site. |
+| `SMTP_USERNAME` | The Offerboard Gmail address |
+| `SMTP_PASSWORD` | The app password from 4.1 |
+
+**Variables** tab → **New repository variable**:
+
+| Name | Value |
+|---|---|
+| `SITE_URL` | `https://offerboard.onrender.com` (your Render URL, no trailing slash) |
+
+**Do not** add `SMTP_USERNAME` / `SMTP_PASSWORD` to Render. Render can't send email, and
+with them set the password-reset page would try and time out.
+
+### 4.3 Try it
+
+1. GitHub repo → **Actions** → **Daily reminders** → **Run workflow**. Leave
+   "Only list who would be emailed" ticked → **Run workflow**. Open the run: the log
+   lists who would be emailed. Nothing is sent.
+2. Run it again with the box **unticked** to really send. Each person gets at most
+   one email per day, so running it again the same day sends nothing new.
+3. From then on it runs every morning on its own.
+
+To see what your own email looks like without sending anything: in the app,
+**Settings → Preview today's email**.
+
+> GitHub pauses scheduled workflows in a repository with no activity for 60 days. If
+> reminders stop, push any commit (or click **Enable workflow** on the Actions page).
