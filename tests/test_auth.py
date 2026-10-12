@@ -14,7 +14,7 @@ def test_landing_page_is_public(client):
 
 def test_landing_page_sends_signed_in_users_to_the_app(client, user):
     client.force_login(user)
-    assert client.get(reverse("landing")).url == reverse("tracker:home")
+    assert client.get(reverse("landing")).url == reverse("tracker:board")
 
 
 def test_signup_creates_an_account_and_signs_in(client):
@@ -22,7 +22,7 @@ def test_signup_creates_an_account_and_signs_in(client):
         reverse("account_signup"), {"email": "new@example.com", "password1": "a-long-passphrase-9"}, follow=True
     )
 
-    assert response.redirect_chain[-1][0] == reverse("tracker:home")
+    assert response.redirect_chain[-1][0] == reverse("tracker:board")
     assert response.context["user"].email == "new@example.com"
 
 
@@ -35,7 +35,7 @@ def test_signup_rejects_a_duplicate_email(client, user):
 
 def test_login_with_email_and_password(client, user):
     response = client.post(reverse("account_login"), {"login": user.email, "password": "correct-horse-1"})
-    assert response.url == reverse("tracker:home")
+    assert response.url == reverse("tracker:board")
 
 
 def test_google_button_hidden_until_configured(client, settings):

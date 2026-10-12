@@ -92,7 +92,7 @@ def test_delete_an_application(signed_in, user, make_application):
 
     response = signed_in.post(reverse("tracker:delete", args=[application.pk]))
 
-    assert response.url == reverse("tracker:home")
+    assert response.url == reverse("tracker:board")
     assert not Application.objects.exists()
 
 
@@ -164,13 +164,13 @@ def companies(response):
 
 
 def test_search_matches_company_role_location_and_notes(signed_in, three):
-    assert companies(signed_in.get(reverse("tracker:home"), {"q": "shop"})) == ["Shopify"]
-    assert companies(signed_in.get(reverse("tracker:home"), {"q": "analyst"})) == ["RBC"]
-    assert companies(signed_in.get(reverse("tracker:home"), {"q": "toronto"})) == ["RBC"]
+    assert companies(signed_in.get(reverse("tracker:table"), {"q": "shop"})) == ["Shopify"]
+    assert companies(signed_in.get(reverse("tracker:table"), {"q": "analyst"})) == ["RBC"]
+    assert companies(signed_in.get(reverse("tracker:table"), {"q": "toronto"})) == ["RBC"]
 
 
 def test_filter_by_stage_and_counts(signed_in, three):
-    response = signed_in.get(reverse("tracker:home"), {"stage": Stage.APPLIED})
+    response = signed_in.get(reverse("tracker:table"), {"stage": Stage.APPLIED})
 
     assert sorted(companies(response)) == ["Google", "Shopify"]
     counts = {stage: n for stage, n in response.context["stage_counts"]}
@@ -179,12 +179,12 @@ def test_filter_by_stage_and_counts(signed_in, three):
 
 
 def test_sort_by_deadline_puts_empty_deadlines_last(signed_in, three):
-    response = signed_in.get(reverse("tracker:home"), {"sort": "deadline"})
+    response = signed_in.get(reverse("tracker:table"), {"sort": "deadline"})
     assert companies(response) == ["Google", "Shopify", "RBC"]
 
 
 def test_unknown_sort_and_stage_fall_back_to_defaults(signed_in, three):
-    response = signed_in.get(reverse("tracker:home"), {"sort": "password", "stage": "99"})
+    response = signed_in.get(reverse("tracker:table"), {"sort": "password", "stage": "99"})
 
     assert response.status_code == 200
     assert response.context["sort"] == "updated"
@@ -192,7 +192,7 @@ def test_unknown_sort_and_stage_fall_back_to_defaults(signed_in, three):
 
 
 def test_htmx_requests_get_only_the_results(signed_in, three):
-    response = signed_in.get(reverse("tracker:home"), {"q": "rbc"}, **HTMX)
+    response = signed_in.get(reverse("tracker:table"), {"q": "rbc"}, **HTMX)
 
     content = response.content.decode()
     assert content.lstrip().startswith('<div id="results"')
@@ -201,12 +201,12 @@ def test_htmx_requests_get_only_the_results(signed_in, three):
 
 
 def test_no_matches_shows_a_message(signed_in, three):
-    content = signed_in.get(reverse("tracker:home"), {"q": "zzz"}).content.decode()
+    content = signed_in.get(reverse("tracker:table"), {"q": "zzz"}).content.decode()
     assert "No applications match" in content
 
 
 def test_empty_account_shows_the_welcome_state(signed_in):
-    content = signed_in.get(reverse("tracker:home")).content.decode()
+    content = signed_in.get(reverse("tracker:table")).content.decode()
     assert "Add your first application" in content
 
 
@@ -214,7 +214,7 @@ def test_pages_out_of_range_show_the_last_page(signed_in, user, make_application
     for i in range(51):
         make_application(user, company=f"Company {i}")
 
-    response = signed_in.get(reverse("tracker:home"), {"page": "999"})
+    response = signed_in.get(reverse("tracker:table"), {"page": "999"})
 
     assert response.status_code == 200
     assert response.context["page_obj"].number == 2
@@ -230,7 +230,7 @@ def test_table_query_count_does_not_grow_with_rows(signed_in, user, make_applica
 
     # session + user + counts + exists/paginator count + rows, regardless of how many rows.
     with django_assert_max_num_queries(6):
-        signed_in.get(reverse("tracker:home"))
+        signed_in.get(reverse("tracker:table"))
 
 
 def test_detail_query_count_does_not_grow_with_history(
@@ -256,13 +256,13 @@ def test_htmx_posts_need_the_csrf_token(user, make_application):
     assert client.post(url, {"to": Stage.OFFER}, **HTMX).status_code == 403
 
     # The page puts the token in hx-headers, so HTMX sends it as X-CSRFToken.
-    client.get(reverse("tracker:home"))
+    client.get(reverse("tracker:table"))
     token = client.cookies["csrftoken"].value
     assert client.post(url, {"to": Stage.OFFER}, HTTP_X_CSRFTOKEN=token, **HTMX).status_code == 204
 
 
 def test_pages_include_the_csrf_header_for_htmx(signed_in):
-    content = signed_in.get(reverse("tracker:home")).content.decode()
+    content = signed_in.get(reverse("tracker:table")).content.decode()
     assert 'hx-headers=\'{"X-CSRFToken":' in content
 
 

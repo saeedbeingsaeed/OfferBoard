@@ -121,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LOGIN_URL = "account_login"
-LOGIN_REDIRECT_URL = "tracker:home"
+LOGIN_REDIRECT_URL = "tracker:board"
 ACCOUNT_LOGOUT_REDIRECT_URL = "landing"
 
 # Email + password only; no usernames anywhere in the UI.

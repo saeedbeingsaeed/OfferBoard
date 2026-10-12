@@ -6,7 +6,7 @@ from django.shortcuts import redirect, render
 @login_not_required
 def landing(request):
     if request.user.is_authenticated:
-        return redirect("tracker:home")
+        return redirect("tracker:board")
     return render(request, "landing.html")
 
 

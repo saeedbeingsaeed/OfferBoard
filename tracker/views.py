@@ -2,7 +2,7 @@ import json
 
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Max, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
@@ -23,6 +23,39 @@ def with_events(response, **events):
     """Fire client-side events after an HTMX request (handled in static/js/app.js)."""
     response["HX-Trigger"] = json.dumps(events)
     return response
+
+
+# --- Board view ----------------------------------------------------------------
+
+
+class BoardView(OwnedObjectMixin, ListView):
+    model = Application
+    template_name = "tracker/board.html"
+
+    def get_queryset(self):
+        # stage_since: when the card last entered its current stage, from its history.
+        # The database works it out in the same single query (no query per card).
+        return (
+            super()
+            .get_queryset()
+            .annotate(stage_since=Max("history__changed_at", filter=Q(history__to_stage=F("stage"))))
+            .order_by(F("deadline").asc(nulls_last=True), "-updated_at")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        columns = {stage: [] for stage in Stage}
+        for application in context["object_list"]:
+            columns[application.stage].append(application)
+        context["columns"] = list(columns.items())
+        context["stages"] = Stage.choices
+        return context
+
+    def get_template_names(self):
+        # After a move, the board refreshes itself with an HTMX request for just the board.
+        if is_htmx(self.request):
+            return [f"{self.template_name}#board"]
+        return [self.template_name]
 
 
 # --- Table view ----------------------------------------------------------------
@@ -140,13 +173,20 @@ class ApplicationDetailView(OwnedObjectMixin, DetailView):
         return super().get_queryset().select_related("resume_version").prefetch_related("history")
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(stages=Stage.choices, **kwargs)
+        context = super().get_context_data(stages=Stage.choices, **kwargs)
+        # Pair each history row with the next one, so the page can say how long the
+        # application spent in each stage. The latest row is still ongoing (until=None).
+        changes = list(self.object.history.all())
+        context["timeline"] = [
+            (change, changes[i + 1].changed_at if i + 1 < len(changes) else None) for i, change in enumerate(changes)
+        ][::-1]
+        return context
 
 
 class ApplicationDeleteView(OwnedObjectMixin, DeleteView):
     model = Application
     template_name = "tracker/application_confirm_delete.html"
-    success_url = reverse_lazy("tracker:home")
+    success_url = reverse_lazy("tracker:board")
 
     def form_valid(self, form):
         name = str(self.object)

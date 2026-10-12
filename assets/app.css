@@ -123,3 +123,20 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Board ---------------------------------------------------------------------- */
+
+/* "Drop here" only shows in a column with no cards. */
+.board-list:has(.board-card) .board-empty {
+  display: none;
+}
+/* Highlight every column as a drop target while dragging. */
+body.is-dragging .board-list {
+  @apply border-dashed border-zinc-300 dark:border-zinc-700;
+}
+.board-ghost {
+  @apply opacity-40;
+}
+.board-chosen {
+  @apply shadow-lg ring-2 ring-brand-500/40;
+}

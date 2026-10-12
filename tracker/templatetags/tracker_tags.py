@@ -39,3 +39,10 @@ def ago(moment):
     if (timezone.now() - moment).total_seconds() < 60:
         return "just now"
     return f"{timesince(moment, depth=1)} ago"
+
+
+@register.filter
+def days_ago(moment):
+    """Compact age for board cards: "today", "1d", "12d"."""
+    days = (timezone.localdate() - timezone.localtime(moment).date()).days
+    return "today" if days <= 0 else f"{days}d"

@@ -55,9 +55,9 @@ def test_cannot_move_another_users_application(signed_in, theirs):
 def test_list_and_search_never_show_another_users_applications(signed_in, user, theirs, make_application):
     make_application(user, company="My Company")
 
-    page = signed_in.get(reverse("tracker:home")).content.decode()
-    search = signed_in.get(reverse("tracker:home"), {"q": "Their"}).content.decode()
-    notes_search = signed_in.get(reverse("tracker:home"), {"q": "private"}).content.decode()
+    page = signed_in.get(reverse("tracker:table")).content.decode()
+    search = signed_in.get(reverse("tracker:table"), {"q": "Their"}).content.decode()
+    notes_search = signed_in.get(reverse("tracker:table"), {"q": "private"}).content.decode()
 
     assert "My Company" in page
     assert "Their Company" not in page + search + notes_search
@@ -66,7 +66,7 @@ def test_list_and_search_never_show_another_users_applications(signed_in, user, 
 def test_stage_counts_only_include_my_applications(signed_in, user, theirs, make_application):
     make_application(user)
 
-    response = signed_in.get(reverse("tracker:home"))
+    response = signed_in.get(reverse("tracker:table"))
 
     assert response.context["searched_total"] == 1
 
