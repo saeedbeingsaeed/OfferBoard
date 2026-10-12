@@ -127,3 +127,14 @@ def test_old_demos_do_not_count_toward_the_limit(client, monkeypatch):
     client.post(reverse("demo"))
 
     assert User.objects.filter(is_demo=True).count() == 2
+
+
+def test_account_menu_links_to_privacy_for_real_and_demo_users(signed_in):
+    from django.test import Client
+
+    demo_client = Client()
+    demo_client.post(reverse("demo"))
+    for client in (signed_in, demo_client):
+        html = client.get(reverse("tracker:board")).content.decode()
+        menu = html[html.index('aria-label="Account menu"') : html.index("</header>")]
+        assert f'href="{reverse("privacy")}"' in menu

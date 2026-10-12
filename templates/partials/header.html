@@ -28,6 +28,7 @@
             <p class="truncate px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400">{% if user.is_demo %}Demo account{% else %}{{ user.email }}{% endif %}</p>
             <a href="{% url 'settings' %}" class="block rounded-md px-3 py-2 text-sm text-zinc-700 no-underline hover:bg-zinc-100 hover:no-underline dark:text-zinc-200 dark:hover:bg-zinc-800">Settings</a>
             <a href="{% url 'tracker:resumes' %}" class="block rounded-md px-3 py-2 text-sm text-zinc-700 no-underline hover:bg-zinc-100 hover:no-underline dark:text-zinc-200 dark:hover:bg-zinc-800">Resume versions</a>
+            <a href="{% url 'privacy' %}" class="block rounded-md px-3 py-2 text-sm text-zinc-700 no-underline hover:bg-zinc-100 hover:no-underline dark:text-zinc-200 dark:hover:bg-zinc-800">Privacy</a>
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}
               <button type="submit" class="block w-full rounded-md px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800">Sign out</button>
