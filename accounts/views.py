@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
@@ -39,6 +40,11 @@ def start_demo(request):
 @staff_member_required
 def metrics_page(request):
     return render(request, "accounts/metrics.html", {"metrics": metrics.collect()})
+
+
+@login_not_required
+def privacy(request):
+    return render(request, "privacy.html", {"contact_email": settings.CONTACT_EMAIL})
 
 
 @login_not_required

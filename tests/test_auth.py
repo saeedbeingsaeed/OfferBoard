@@ -84,3 +84,13 @@ def test_custom_404_page(client, settings):
     response = client.get("/no-such-page/")
     assert response.status_code == 404
     assert b"Page not found" in response.content
+
+
+def test_privacy_page_is_public_and_shows_the_contact(client, settings):
+    settings.CONTACT_EMAIL = "help@example.com"
+
+    response = client.get(reverse("privacy"))
+
+    assert response.status_code == 200
+    assert "help@example.com" in response.content.decode()
+    assert reverse("privacy") in client.get(reverse("landing")).content.decode()

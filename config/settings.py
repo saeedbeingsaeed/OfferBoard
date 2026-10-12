@@ -185,6 +185,9 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 # Full address of the site, for links in emails (there's no request to build them from).
 SITE_URL = env("SITE_URL", "http://localhost:8000").rstrip("/")
 
+# Shown on the privacy page for questions and deletion requests.
+CONTACT_EMAIL = env("CONTACT_EMAIL")
+
 # --- Static files ------------------------------------------------------------
 
 STATIC_URL = "static/"
