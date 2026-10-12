@@ -6,11 +6,13 @@ from django.db.models import Count, F, Max, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views import View
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, TemplateView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 
-from .forms import ApplicationForm, ResumeVersionForm
+from . import csv_io, stats
+from .forms import ApplicationForm, ImportForm, ResumeVersionForm
 from .models import Application, ResumeVersion, Stage
 from .scoping import OwnedObjectMixin
 
@@ -256,3 +258,61 @@ class ResumeVersionDeleteView(OwnedObjectMixin, DeleteView):
         response = super().form_valid(form)
         messages.success(self.request, f"Deleted {name}. Applications that used it now show “Not tracked”.")
         return response
+
+
+# --- Stats -----------------------------------------------------------------------
+
+
+class StatsView(TemplateView):
+    template_name = "tracker/stats.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        weeks = stats.per_week(user)
+        resumes = stats.per_resume(user)
+        context.update(
+            summary=stats.summary(user),
+            weeks=weeks,
+            week_max=max([w["count"] for w in weeks] + [1]),
+            weeks_total=sum(w["count"] for w in weeks),
+            resumes=resumes,
+        )
+        return context
+
+
+# --- CSV ---------------------------------------------------------------------------
+
+
+class ExportView(View):
+    def get(self, request):
+        filename = f"offerboard-{timezone.localdate().isoformat()}.csv"
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        response.write("\ufeff")  # byte-order mark, so Excel opens accented characters correctly
+        csv_io.write_csv(request.user, response)
+        return response
+
+
+class ImportView(FormView):
+    template_name = "tracker/import.html"
+    form_class = ImportForm
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(columns=csv_io.COLUMNS, stages=Stage.labels, max_rows=csv_io.MAX_ROWS, **kwargs)
+
+    def form_valid(self, form):
+        try:
+            imported, skipped, errors = csv_io.import_csv(self.request.user, form.cleaned_data["file"])
+        except csv_io.CSVImportError as problem:
+            form.add_error("file", str(problem))
+            return self.form_invalid(form)
+        if errors:
+            return self.render_to_response(
+                self.get_context_data(form=form, row_errors=errors[:25], error_count=len(errors))
+            )
+        message = f"Imported {imported} application{'s' if imported != 1 else ''}."
+        if skipped:
+            message += f" Skipped {skipped} already on your board."
+        messages.success(self.request, message)
+        return redirect("tracker:board")

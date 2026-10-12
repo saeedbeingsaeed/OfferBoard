@@ -52,23 +52,14 @@ class ApplicationForm(forms.ModelForm):
         self.fields["resume_version"].queryset = ResumeVersion.objects.for_user(user)
         self.fields["resume_version"].empty_label = "Not tracked"
 
-    def clean(self):
-        cleaned = super().clean()
-        name = cleaned.get("new_resume", "").strip()
-        if name:
-            existing = ResumeVersion.objects.for_user(self.user).filter(name__iexact=name).first()
-            cleaned["new_resume_obj"] = existing  # reuse rather than duplicate
-        return cleaned
-
     def save(self, commit=True):
         application = super().save(commit=False)
         application.user = self.user
         name = self.cleaned_data.get("new_resume", "").strip()
         if name:
-            resume = self.cleaned_data.get("new_resume_obj")
-            if resume is None:
-                resume = ResumeVersion.objects.create(user=self.user, name=name)
-            application.resume_version = resume
+            # Reuse a version with the same name (ignoring case) rather than duplicate it.
+            resume = ResumeVersion.objects.for_user(self.user).filter(name__iexact=name).first()
+            application.resume_version = resume or ResumeVersion.objects.create(user=self.user, name=name)
         if commit:
             application.save()
         return application
@@ -96,3 +87,10 @@ class ResumeVersionForm(forms.ModelForm):
         if commit:
             resume.save()
         return resume
+
+
+class ImportForm(forms.Form):
+    file = forms.FileField(
+        label="CSV file",
+        widget=forms.ClearableFileInput(attrs={"accept": ".csv,text/csv"}),
+    )
