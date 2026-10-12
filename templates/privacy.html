@@ -18,7 +18,7 @@
     <h2>How it's used</h2>
     <ul>
       <li>To show your board, table and stats. Only you can see your applications.</li>
-      <li>To send your daily reminder email, if it's turned on. You can turn it off in Settings or with the link in any reminder.</li>
+      <li>To send your daily reminder email, if it's turned on and your email address is verified (signing in with Google verifies it). You can turn it off in Settings or with the link in any reminder.</li>
       <li>The person who runs Offerboard looks at totals (for example, the number of sign-ups). Like the admin of any website, they can technically open the database, but they only look at an individual account to fix a problem you report.</li>
     </ul>
     <p class="mt-2">Your data is never sold or shared for marketing.</p>
@@ -30,7 +30,9 @@
     <ul>
       <li>Download everything you've entered at any time: Table → Export CSV.</li>
       <li>Edit or delete any application whenever you like.</li>
-      <li>To delete your account and all its data, {% if contact_email %}email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> from the address you signed up with{% else %}contact the person who runs this Offerboard{% endif %}. It's done promptly.</li>
+      <li>Delete your account and all its data yourself, at any time: Settings → Delete account. It's immediate and permanent.
+        Offerboard keeps only an anonymous note that an account was deleted (when it joined, when it was deleted, how many
+        applications it had), with no email address or content, so the site can count deletions.</li>
     </ul>
 
     <h2>Demo accounts</h2>

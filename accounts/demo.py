@@ -17,6 +17,10 @@ from django.utils import timezone
 from tracker.models import Application, ResumeVersion, Stage, StageChange
 
 DEMO_LIFETIME = datetime.timedelta(hours=24)
+# At most this many new demos per hour across the whole site. Each demo is ~60
+# rows, so even a script hammering the button can add at most a few MB a day
+# (and demos are purged after 24 hours), far below Supabase's free 500 MB.
+DEMOS_PER_HOUR = 30
 SV, AP, OA, IV, OF, RJ = (
     Stage.SAVED,
     Stage.APPLIED,
@@ -126,6 +130,16 @@ def create_demo_user():
         application.updated_at = now - datetime.timedelta(days=history[-1][1], hours=3)
     Application.objects.bulk_update(applications, ["updated_at"])
     return user
+
+
+def too_many_recent_demos(now=None):
+    """
+    A site-wide limit, counted from the database. Unlike a per-IP limit, it
+    can't be dodged by faking addresses, and it works across all server
+    processes without a shared cache.
+    """
+    since = (now or timezone.now()) - datetime.timedelta(hours=1)
+    return get_user_model().objects.filter(is_demo=True, date_joined__gte=since).count() >= DEMOS_PER_HOUR
 
 
 def purge_expired(now=None):

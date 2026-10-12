@@ -6,11 +6,12 @@
     <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Admins only. Demo accounts are excluded except where noted. Active = added, edited or moved an application.</p>
   </div>
 
-  <div class="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+  <div class="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
     {% include "tracker/partials/stat_tile.html" with label="Sign-ups" value=metrics.signups note=metrics.signups_7d|stringformat:"d"|add:" in the last 7 days" %}
     {% include "tracker/partials/stat_tile.html" with label="Active, last 7 days" value=metrics.active_7d note=metrics.active_30d|stringformat:"d"|add:" in the last 30 days" %}
     {% include "tracker/partials/stat_tile.html" with label="Applications tracked" value=metrics.applications note="by real accounts" %}
     {% include "tracker/partials/stat_tile.html" with label="Demo sessions" value=metrics.demos_7d note="started in the last 7 days" %}
+    {% include "tracker/partials/stat_tile.html" with label="Accounts deleted" value=metrics.deleted note=metrics.deleted_30d|stringformat:"d"|add:" in the last 30 days" %}
   </div>
 
   <section class="card mt-4 p-5 sm:p-6" aria-labelledby="signups-heading">
@@ -28,5 +29,5 @@
       </tbody>
     </table>
   </section>
-  <p class="mt-4 text-sm"><a href="{% url 'admin:index' %}">Open the Django admin →</a></p>
+  <p class="mt-4 text-sm"><a href="{% url 'admin:index' %}">Open the Django admin →</a> · <a href="{% url 'admin:accounts_deletedaccount_changelist' %}">Deleted accounts</a></p>
 {% endblock %}

@@ -16,10 +16,12 @@ import datetime
 import logging
 from dataclasses import dataclass, field
 
+from allauth.account.models import EmailAddress
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail, signing
 from django.core.mail import EmailMultiAlternatives
+from django.db.models import Exists, OuterRef
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -54,13 +56,27 @@ class Digest:
         return " and ".join(parts).capitalize()
 
 
+def verified_email_exists():
+    """
+    SQL check that a user's email address has been verified. Sign-up doesn't
+    verify addresses (the web server can't send email), so without this anyone
+    could register someone else's address and have reminders sent to them.
+    Google sign-in verifies the address, so Google users pass.
+    """
+    return Exists(EmailAddress.objects.filter(user=OuterRef("pk"), email__iexact=OuterRef("email"), verified=True))
+
+
 def recipients(today):
     """Users who should be considered for today's email."""
     return (
         get_user_model()
-        .objects.filter(is_active=True, is_demo=False, reminders_enabled=True)
+        .objects.filter(verified_email_exists(), is_active=True, is_demo=False, reminders_enabled=True)
         .exclude(last_reminder_sent_on=today)
     )
+
+
+def has_verified_email(user):
+    return get_user_model().objects.filter(verified_email_exists(), pk=user.pk).exists()
 
 
 def build_digests(users, today):

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User
+from .models import DeletedAccount, User
 
 
 @admin.register(User)
@@ -17,3 +17,16 @@ class UserAdmin(BaseUserAdmin):
         ("Dates", {"fields": ["last_login", "date_joined"]}),
     ]
     add_fieldsets = [(None, {"classes": ["wide"], "fields": ["email", "password1", "password2"]})]
+
+
+@admin.register(DeletedAccount)
+class DeletedAccountAdmin(admin.ModelAdmin):
+    list_display = ["deleted_at", "joined_at", "application_count", "signed_up_with"]
+    list_filter = ["signed_up_with"]
+
+    # A record of what happened: it can be looked at, not edited.
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

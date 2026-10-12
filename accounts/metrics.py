@@ -9,6 +9,8 @@ from django.utils import timezone
 
 from tracker.models import Application, StageChange
 
+from .models import DeletedAccount
+
 WEEKS = 8
 
 
@@ -34,6 +36,11 @@ def collect(now=None):
     )
     totals["demos_7d"] = users.filter(is_demo=True, date_joined__gte=week_ago).count()
     totals["applications"] = Application.objects.filter(user__is_demo=False).count()
+    totals.update(
+        DeletedAccount.objects.aggregate(
+            deleted=Count("pk"), deleted_30d=Count("pk", filter=Q(deleted_at__gte=month_ago))
+        )
+    )
 
     first_week = (now - datetime.timedelta(weeks=WEEKS - 1)).date()
     first_week -= datetime.timedelta(days=first_week.weekday())

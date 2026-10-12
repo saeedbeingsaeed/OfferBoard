@@ -51,5 +51,5 @@ def test_metrics_page_query_count(client, user, django_assert_max_num_queries):
     user.is_staff = True
     user.save()
     client.force_login(user)
-    with django_assert_max_num_queries(6):
+    with django_assert_max_num_queries(7):
         client.get(reverse("metrics"))

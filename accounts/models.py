@@ -44,3 +44,22 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class DeletedAccount(models.Model):
+    """
+    An anonymous note that someone deleted their account, so deletions can be
+    counted. Deliberately stores nothing that identifies the person: no email,
+    no name, no applications.
+    """
+
+    deleted_at = models.DateTimeField(auto_now_add=True)
+    joined_at = models.DateTimeField()
+    application_count = models.PositiveIntegerField()
+    signed_up_with = models.CharField(max_length=20)  # "google", "password" or "both"
+
+    class Meta:
+        ordering = ["-deleted_at"]
+
+    def __str__(self):
+        return f"Account deleted {self.deleted_at:%Y-%m-%d}"

@@ -23,7 +23,8 @@ actually working in your search.
 - **Stats.** Applications per week, response rate, how far applications get, and response rate per resume version.
 - **CSV import and export.** Import validates every row first and saves nothing if any row is wrong.
 - **Demo mode.** A "Try the demo" button that opens a fully working board with sample data, isolated from real users.
-- Email/password and Google sign-in. Light and dark mode. Keyboard accessible.
+- Email/password and Google sign-in, a plain-language privacy page, and self-service account deletion.
+- Light and dark mode. Keyboard accessible.
 
 | Table | Stats |
 |---|---|
@@ -98,9 +99,18 @@ a fixed query count however much data there is (board, table, detail, stats, rem
 that separates two real users separates demo and real data. Demo users are deleted when they sign out, are
 never emailed, aren't counted in metrics, and are purged after 24 hours by the daily job.
 
-**Reminders are safe to re-run.** The job records the day each user was emailed, so a retried run doesn't
-email anyone twice. One failing address doesn't stop the rest, and the run fails visibly if any email failed.
-Unsubscribe links are signed tokens that work without signing in.
+**Reminders are safe to re-run, and only go to verified addresses.** The job records the day each user was
+emailed, so a retried run doesn't email anyone twice. One failing address doesn't stop the rest, and the run fails
+visibly if any email failed. Unsubscribe links are signed tokens that work without signing in. Because sign-up
+can't send a verification email (see below), reminders only go to addresses Google has verified, so nobody can
+register someone else's address and have reminders sent to them.
+
+**Users can delete their own account.** Settings → Delete account removes the user and everything they own in one
+transaction, leaving only an anonymous record (join date, deletion date, application count) so deletions can be
+counted on the metrics page.
+
+**Demo creation is rate-limited.** At most 30 new demos per hour site-wide, counted from the database, so a script
+hammering the button can't fill the free database.
 
 **Security.** CSRF protection on every state-changing request, including HTMX (the token is sent as a header
 from `hx-headers`) and drag and drop. In production: `DEBUG` off by default, secrets from environment variables,

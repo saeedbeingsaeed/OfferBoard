@@ -25,6 +25,13 @@
     </main>
   {% endblock %}
 
+  {# Outside the body block, so every page has it: app pages, sign-in pages and the landing page. #}
+  <footer class="border-t border-zinc-200/70 py-5 text-center text-xs text-zinc-500 dark:border-zinc-800/70 dark:text-zinc-400">
+    <a href="{% url 'privacy' %}" class="text-zinc-500 dark:text-zinc-400">Privacy</a>
+    <span class="mx-2" aria-hidden="true">·</span>
+    <a href="https://github.com/saeedbeingsaeed/OfferBoard" class="text-zinc-500 dark:text-zinc-400">Source on GitHub</a>
+  </footer>
+
   {% block extra_body %}{% endblock %}
 </body>
 </html>

@@ -2,6 +2,7 @@ import datetime
 from unittest import mock
 
 import pytest
+from allauth.account.models import EmailAddress
 from django.core import mail, signing
 from django.core.management import CommandError, call_command
 from django.test import Client
@@ -12,6 +13,18 @@ from tracker import reminders
 from tracker.models import Application, Stage
 
 pytestmark = pytest.mark.django_db
+
+
+def verify(user):
+    EmailAddress.objects.create(user=user, email=user.email, primary=True, verified=True)
+
+
+@pytest.fixture(autouse=True)
+def verified_users(user, other_user):
+    """Reminders only go to verified addresses; these tests are about everything else."""
+    verify(user)
+    verify(other_user)
+
 
 TODAY = datetime.date(2026, 10, 12)
 
@@ -81,6 +94,7 @@ def test_building_digests_takes_two_queries_for_any_number_of_users(
 ):
     users = [django_user_model.objects.create_user(email=f"u{i}@example.com") for i in range(10)]
     for u in users:
+        verify(u)
         make_application(u, deadline=days(1))
         make_stale(make_application(u), 20)
 
@@ -246,3 +260,51 @@ def test_password_reset_page_is_honest_when_email_is_off(client, settings):
     content = client.get(reverse("account_reset_password")).content.decode()
     assert "isn't available yet" in content
     assert "Send reset link" not in content
+
+
+# --- Only verified addresses -------------------------------------------------------------
+
+
+def test_unverified_addresses_get_no_reminders(django_user_model, make_application):
+    """Stops someone signing up with another person's address and having emails sent to them."""
+    stranger = django_user_model.objects.create_user(email="someone-else@example.com", password="x")
+    EmailAddress.objects.create(user=stranger, email=stranger.email, verified=False)
+    make_application(stranger, deadline=days(1))
+
+    assert stranger not in reminders.recipients(TODAY)
+    assert not reminders.has_verified_email(stranger)
+
+
+def test_signing_in_with_google_verifies_an_existing_account(django_user_model, rf):
+    from allauth.socialaccount.models import SocialAccount, SocialLogin
+    from allauth.socialaccount.signals import social_account_added
+
+    member = django_user_model.objects.create_user(email="Ada@Example.com", password="x")
+    EmailAddress.objects.create(user=member, email=member.email, verified=False)
+    login = SocialLogin(
+        user=member,
+        account=SocialAccount(provider="google", uid="123"),
+        email_addresses=[EmailAddress(email="ada@example.com", verified=True, primary=True)],
+    )
+
+    social_account_added.send(sender=SocialLogin, request=rf.get("/"), sociallogin=login)
+
+    assert reminders.has_verified_email(member)
+
+
+def test_settings_page_explains_how_to_get_reminders(client, django_user_model, settings):
+    settings.GOOGLE_CLIENT_ID, settings.GOOGLE_CLIENT_SECRET = "id", "secret"
+    settings.SOCIALACCOUNT_PROVIDERS = {"google": {"APPS": [{"client_id": "id", "secret": "secret", "key": ""}]}}
+    member = django_user_model.objects.create_user(email="new@example.com", password="x")
+    client.force_login(member)
+
+    content = client.get(reverse("settings")).content.decode()
+
+    assert "Reminders aren't being sent yet" in content
+    assert "Verify with Google" in content
+    assert "process=connect" in content
+
+
+def test_verified_users_see_no_warning(client, user):
+    client.force_login(user)  # verified by the autouse fixture
+    assert "Reminders aren't being sent yet" not in client.get(reverse("settings")).content.decode()

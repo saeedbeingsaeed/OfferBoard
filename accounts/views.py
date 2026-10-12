@@ -13,7 +13,7 @@ from django.views.decorators.http import require_POST
 
 from tracker import reminders
 
-from . import demo, metrics
+from . import deletion, demo, metrics
 from .context_processors import email_sending_enabled
 from .forms import ReminderSettingsForm
 
@@ -32,6 +32,9 @@ def start_demo(request):
     if request.user.is_authenticated:
         # Never swap a signed-in user (real or demo) for a new demo account.
         return redirect("tracker:board")
+    if demo.too_many_recent_demos():
+        messages.error(request, "Lots of people are trying the demo right now. Please try again in a few minutes.")
+        return redirect("landing")
     user = demo.create_demo_user()
     login(request, user, backend="django.contrib.auth.backends.ModelBackend")
     return redirect("tracker:board")
@@ -71,7 +74,30 @@ def settings_page(request):
             return response
         messages.success(request, message)
         return redirect("settings")
-    return render(request, "accounts/settings.html", {"form": form, "email_enabled": email_sending_enabled()})
+    return render(
+        request,
+        "accounts/settings.html",
+        {
+            "form": form,
+            "email_enabled": email_sending_enabled(),
+            "email_verified": reminders.has_verified_email(request.user),
+        },
+    )
+
+
+def delete_account(request):
+    """Users delete their own account. GET asks; POST with the confirmation word does it."""
+    user = request.user
+    if user.is_demo:
+        return redirect("settings")  # demo accounts are deleted when they sign out
+    error = None
+    if request.method == "POST":
+        if request.POST.get("confirm", "").strip().lower() == "delete":
+            deletion.delete_account(request, user)
+            messages.success(request, "Your account and everything in it have been deleted.")
+            return redirect("landing")
+        error = "Type delete to confirm."
+    return render(request, "accounts/delete_account.html", {"error": error})
 
 
 def reminder_preview(request):
