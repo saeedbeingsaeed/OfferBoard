@@ -23,8 +23,11 @@
   {% else %}
     {# All filter state (search, stage, sort, page) belongs to this one form. Controls further down #}
     {# join it with form="filters", so HTMX and the no-JavaScript fallback both send the same query. #}
+    {# hx-sync="this:replace" cancels a search still in flight when a newer one starts, so a slow #}
+    {# older response can never overwrite newer results. #}
     <form id="filters" method="get" action="{% url 'tracker:table' %}" role="search" class="mt-6"
           hx-get="{% url 'tracker:table' %}" hx-target="#results" hx-swap="outerHTML" hx-push-url="true"
+          hx-sync="this:replace"
           hx-trigger="input changed delay:300ms from:#search, change[target.matches('.js-filter')] from:body, submit, applications-changed from:body">
       <label for="search" class="sr-only">Search applications</label>
       <div class="relative max-w-md">

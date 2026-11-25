@@ -23,7 +23,8 @@
     {% partialdef board inline %}
       {# Refreshes itself after any move, so counts, order and badges always match the database. #}
       <div id="board" class="-mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 transition-opacity sm:mx-0 sm:px-0 xl:grid xl:grid-cols-6 xl:overflow-visible [&.htmx-request]:opacity-60"
-           hx-get="{% url 'tracker:board' %}" hx-trigger="applications-changed from:body" hx-swap="outerHTML">
+           hx-get="{% url 'tracker:board' %}" hx-trigger="applications-changed from:body" hx-swap="outerHTML"
+           hx-sync="this:replace">
         {% for stage, applications in columns %}
           <section class="stage-{{ stage.value }} flex w-[82vw] shrink-0 snap-start flex-col sm:w-72 xl:w-auto" aria-labelledby="column-{{ stage.value }}">
             <header class="mb-2 flex items-center gap-2 px-1">

@@ -19,6 +19,13 @@ def column(page: Page, stage):
     return page.locator(f"[data-board-list][data-stage='{stage.value}']")
 
 
+def wait_for_drag_and_drop(page: Page):
+    """board.js attaches SortableJS just after the page loads; a drag before that does nothing."""
+    page.wait_for_function(
+        "() => window.Sortable && [...document.querySelectorAll('[data-board-list]')].every((l) => Sortable.get(l))"
+    )
+
+
 def test_sign_up_add_drag_and_review(page: Page, live_server):
     # Sign up from the landing page.
     page.goto(live_server.url)
@@ -42,6 +49,7 @@ def test_sign_up_add_drag_and_review(page: Page, live_server):
     page.get_by_role("link", name="Board", exact=True).click()
     card = page.locator(".board-card", has_text="Shopify")
     expect(column(page, Stage.APPLIED).locator(".board-card")).to_have_count(1)
+    wait_for_drag_and_drop(page)
     card.drag_to(column(page, Stage.INTERVIEW))
     expect(page.get_by_text("Shopify moved to Interview.")).to_be_visible()
     expect(column(page, Stage.INTERVIEW).locator(".board-card", has_text="Shopify")).to_be_visible()
@@ -79,12 +87,15 @@ def test_sign_up_add_drag_and_review(page: Page, live_server):
 def test_failed_drag_puts_the_card_back(page: Page, live_server, django_user_model):
     user = django_user_model.objects.create_user(email="bo@example.com", password="a-long-passphrase-9")
     Application.objects.create(user=user, company="RBC", role="Analyst", stage=Stage.APPLIED)
+    # Make every move fail. Set up before the first page loads: registered mid-navigation,
+    # Playwright can occasionally miss a request and let it through to the real server.
+    page.route("**/stage/", lambda route: route.fulfill(status=500))
     page.goto(f"{live_server.url}/accounts/login/")
     page.get_by_label("Email").fill(user.email)
     page.get_by_label("Password").fill("a-long-passphrase-9")
     page.get_by_role("button", name="Sign in").click()
 
-    page.route("**/stage/", lambda route: route.fulfill(status=500))
+    wait_for_drag_and_drop(page)
     page.locator(".board-card", has_text="RBC").drag_to(column(page, Stage.OFFER))
 
     expect(page.get_by_text("Couldn't move RBC")).to_be_visible()
