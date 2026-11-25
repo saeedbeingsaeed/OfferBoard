@@ -220,7 +220,7 @@ SILENCED_SYSTEM_CHECKS = [
 ]
 X_FRAME_OPTIONS = "DENY"
 # The health check is called over plain HTTP by Render's internal checker.
-SECURE_REDIRECT_EXEMPT = [r"^healthz$"]
+SECURE_REDIRECT_EXEMPT = [r"^healthz$", r"^healthz/db$"]
 
 # --- Misc --------------------------------------------------------------------
 

@@ -94,3 +94,21 @@ def test_privacy_page_is_public_and_shows_the_contact(client, settings):
     assert response.status_code == 200
     assert "help@example.com" in response.content.decode()
     assert reverse("privacy") in client.get(reverse("landing")).content.decode()
+
+
+def test_database_health_check_reports_ok(client):
+    response = client.get(reverse("healthz_db"))
+    assert (response.status_code, response.content) == (200, b"ok")
+
+
+def test_database_health_check_reports_an_unreachable_database(client, monkeypatch):
+    from django.db import OperationalError, connection
+
+    def broken_cursor(*args, **kwargs):
+        raise OperationalError("tenant/user not found")
+
+    monkeypatch.setattr(connection, "cursor", broken_cursor)
+
+    response = client.get(reverse("healthz_db"))
+
+    assert response.status_code == 503

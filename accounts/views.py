@@ -1,10 +1,12 @@
 import json
+import logging
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_not_required
+from django.db import DatabaseError, connection
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -16,6 +18,8 @@ from tracker import reminders
 from . import deletion, demo, metrics
 from .context_processors import email_sending_enabled
 from .forms import ReminderSettingsForm
+
+logger = logging.getLogger(__name__)
 
 
 @login_not_required
@@ -48,6 +52,22 @@ def metrics_page(request):
 @login_not_required
 def privacy(request):
     return render(request, "privacy.html", {"contact_email": settings.CONTACT_EMAIL})
+
+
+@login_not_required
+def healthz_db(request):
+    """
+    Like healthz, but also asks the database a trivial question. Point an uptime
+    monitor here to be alerted when the database is unreachable (for example,
+    a paused free Supabase project), which plain /healthz can't detect.
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+    except DatabaseError:
+        logger.exception("Database health check failed")
+        return HttpResponse("database unavailable", status=503, content_type="text/plain")
+    return HttpResponse("ok", content_type="text/plain")
 
 
 @login_not_required
